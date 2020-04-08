@@ -1,0 +1,43 @@
+{
+  "name": "4myth/logger",
+  "type": "library",
+  "description": "Laravel logger",
+  "keywords": [
+    "Myth",
+    "4myth",
+    "logger",
+    "log"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ahmed Fayez",
+      "email": "mythpe@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=7.1",
+    "laravel/framework": ">=5.5"
+  },
+  "require-dev": {},
+  "autoload": {
+    "psr-4": {
+      "Myth\\Support\\": "src/"
+    },
+    "files": [
+      "src/Helpers/Functions.php"
+    ]
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Myth\\Support\\Logger\\Providers\\LoggerProvider"
+      ],
+      "aliases": {
+        "Myth\\Logger": "Myth\\Support\\Logger"
+      }
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
