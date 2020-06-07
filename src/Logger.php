@@ -22,9 +22,10 @@ class Logger
 
     /**
      * file name
+     *
      * @var string
      */
-    protected $name = 'logger.log';
+    protected $name;
 
     /**
      * @var \Illuminate\Contracts\Foundation\Application|\Illuminate\Filesystem\Filesystem|mixed|string
@@ -33,12 +34,14 @@ class Logger
 
     /**
      * Logger constructor.
+     *
      * @param string $name
      * @param string $path
      */
     public function __construct($name = null, $path = null)
     {
         $path && $this->setPath($path);
+        $name = $name ?? 'logger';
         $name && $this->setName($name);
         $this->fs = app(Filesystem::class);
     }
@@ -47,11 +50,46 @@ class Logger
      * @param $content
      * @param string $name
      * @param string $path
+     *
      * @return mixed|string
      */
     public static function log($content, $name = null, $path = null)
     {
         return (new static($name, $path))->createLog($content);
+    }
+
+    /**
+     * @param $content
+     *
+     * @return mixed|string
+     */
+    public function createLog($content)
+    {
+        $fileName = $this->getFileName($this->name);
+        if (!$this->fs->isDirectory($this->getPath())) {
+            $this->fs->makeDirectory($this->getPath());
+        }
+        try {
+            if (!is_string($content)) {
+                $content = collect($content)->toJson(JSON_UNESCAPED_UNICODE);
+            }
+            $content = "[" . Carbon::now() . "]:" . PHP_EOL . $content;
+            $this->fs->prepend($fileName, $content . PHP_EOL);
+            return $this->fs->get($fileName);
+        }
+        catch (\Exception $exception) {
+        }
+        return "";
+    }
+
+    /**
+     * @param $name
+     *
+     * @return string
+     */
+    protected function getFileName($name)
+    {
+        return $this->getPath() . "/" . ltrim($name, '/');
     }
 
     /**
@@ -83,38 +121,9 @@ class Logger
      */
     public function setName(string $name): void
     {
-        $this->name = Str::before($name, '.log').".log";
-    }
-
-    /**
-     * @param $content
-     * @return mixed|string
-     */
-    public function createLog($content)
-    {
-        $fileName = $this->getFileName($this->name);
-        if(!$this->fs->isDirectory($this->getPath())){
-            $this->fs->makeDirectory($this->getPath());
-        }
-        try{
-            if(!is_string($content)){
-                $content = collect($content)->toJson(JSON_UNESCAPED_UNICODE);
-            }
-            $content = "[".Carbon::now()."]:".PHP_EOL.$content;
-            $this->fs->prepend($fileName, $content.PHP_EOL);
-            return $this->fs->get($fileName);
-        }
-        catch(\Exception $exception){
-        }
-        return "";
-    }
-
-    /**
-     * @param $name
-     * @return string
-     */
-    protected function getFileName($name)
-    {
-        return $this->getPath()."/".ltrim($name, '/');
+        $date = Carbon::now()->format('Y-m-d');
+        $name = Str::finish(Str::beforeLast($name, ($e = '.log')), "-{$date}");
+        $name = preg_replace('/[^a-zA-Z\d+]/', '-', $name);
+        $this->name = "{$name}{$e}";
     }
 }
